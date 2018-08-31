@@ -4,16 +4,16 @@ def movimientoValido(posPersonaje, direccion):
 	posx = posPersonaje[0]
 	posy = posPersonaje[1]
 	if direccion == b"derecha":
-		if (posx+1) < 10:
+		if (posx+50) < 500:
 			return True
 	if direccion == b"izquierda":
-		if (posx-1) > -1:
+		if (posx-50) > -50:
 			return True
 	if direccion == b"arriba":
-		if (posy-1) > -1:
+		if (posy-50) > -50:
 			return True
 	if direccion == b"abajo":
-		if (posx+1) < 10:
+		if (posy+50) < 500:
 			return True
 
 
@@ -21,23 +21,23 @@ def actualizarPosicion(posPersonaje, direccion):
 	posx = posPersonaje[0]
 	posy = posPersonaje[1]
 	if direccion == b"derecha":
-		posx = posx+1
+		posx = posx+50
 	if direccion == b"izquierda":
-		posx = posx-1
+		posx = posx-50
 	if direccion == b"arriba":
-		posy = posy-1
+		posy = posy-50
 	if direccion == b"abajo":
-		posy = posy+1
+		posy = posy+50
 	nuevaDireccion = (posx,posy)
 	return nuevaDireccion
 
 
 def main():
 	conectados = 0
-	listaPersonajes = (b"pacman",b"fa",b"fb",b"fc",b"fd")
+	listaPersonajes = (b"pacman",b"fantasmaAmarillo",b"fantasmaAzul",b"fantasmaRojo",b"fantasmaRosa")
 	usuariosConectados = {}
 	personaje = {}
-	posicionPersonaje = {b"pacman":(5,5),b"fa":(0,0),b"fb":(0,9),b"fc":(9,0),b"fd":(9,9)}
+	posicionPersonaje = {b"pacman":(250,250),b"fantasmaAmarillo":(0,0),b"fantasmaAzul":(0,450),b"fantasmaRojo":(450,0),b"fantasmaRosa":(450,450)}
 	context = zmq.Context()
 	socket = context.socket(zmq.ROUTER)
 	socket.bind("tcp://*:5555")
@@ -64,7 +64,7 @@ def main():
 				posicionPersonaje[obtenerPersonaje] = nuevaPos
 				for member in usuariosConectados:
 					print("enviando nuevas posiciones")
-					socket.send_multipart([member , b"actualizarPosicion",obtenerPersonaje, bytes(nuevaPos[0]), bytes(nuevaPos[1])])
+					socket.send_multipart([member , b"actualizarPosicion",obtenerPersonaje, bytes(str(nuevaPos[0]),"ascii"), bytes(str(nuevaPos[1]),"ascii")])
 
 		if conectados == 2:
 			for member in usuariosConectados:

@@ -4,33 +4,6 @@ import pygame
 import threading
 from pygame.locals import *
 
-def juego(socket):
-	alto=640
-	ancho=480
-	pygame.init()
-	ventana=pygame.display.set_mode((alto, ancho))
-	pygame.display.set_caption("Remedo de Pacman")
-	while True:
-		teclado=pygame.key.get_pressed()
-		for event in pygame.event.get():
-			if event.type==pygame.QUIT:
-				sys.exit()
-			if teclado[K_RIGHT]:
-				print("der")
-				socket.send_multipart([b"movimiento", b"derecha"])
-			if teclado[K_LEFT]:
-				print("isq")
-				socket.send_multipart([b"movimiento", b"izquierda"])
-			if teclado[K_UP]:
-				print("arr")
-				socket.send_multipart([b"movimiento", b"arriba"])
-			if teclado[K_DOWN]:
-				print("aba")
-				socket.send_multipart([b"movimiento", b"abajo"])
-		
-			
-
-
 def main():	
 	if len(sys.argv) != 2:
 		print("Debe ingresar su identificador")
@@ -46,8 +19,8 @@ def main():
 	poller.register(sys.stdin, zmq.POLLIN)
 	poller.register(socket, zmq.POLLIN)
 	socket.send_multipart([b"nuevoJugador", identidad])
-
-	posicionPersonaje = {"pacman":(5,5),"fa":(0,0),"fb":(0,9),"fc":(9,0),"fd":(9,9)}
+	posicionPersonaje = {b"pacman":(250,250),b"fantasmaAmarillo":(0,0),b"fantasmaAzul":(0,450),b"fantasmaRojo":(450,0),b"fantasmaRosa":(450,450)}
+	ventana=""
 	while True:
 		socks = dict(poller.poll())
 		if socket in socks:
@@ -57,19 +30,57 @@ def main():
 				print("tu personaje es: " + miPersonaje.decode("ascii"))
 			if operacion == b"iniciarJuego":
 				iniciarJuego = True
-				#threading.Thread(target = juego, args = (socket, "hola")).start()
-				juego(socket)
-				print(posicionPersonaje)
+				alto=500
+				ancho=500
+				pygame.init()
+				ventana=pygame.display.set_mode((alto, ancho))
+				pygame.display.set_caption("figuras de pacman moviendose")
+				fondo=pygame.image.load("imagenes/fondo.jpg")
+				pacman=pygame.image.load("imagenes/pacman.png")
+				amarillo=pygame.image.load("imagenes/amarillo.png")
+				azul=pygame.image.load("imagenes/asul.png")
+				rojo=pygame.image.load("imagenes/rojo.png")
+				rosa=pygame.image.load("imagenes/rosa.png")
+				ventana.blit(fondo, (0,0))
+				ventana.blit(pacman, posicionPersonaje[b"pacman"])
+				ventana.blit(amarillo, posicionPersonaje[b"fantasmaAmarillo"])
+				ventana.blit(azul, posicionPersonaje[b"fantasmaAzul"])
+				ventana.blit(rojo, posicionPersonaje[b"fantasmaRojo"])
+				ventana.blit(rosa, posicionPersonaje[b"fantasmaRosa"])
+				pygame.display.flip()
 			if operacion == b"actualizarPosicion":
-				print("su madre")
-			
-			
+				personaje = mensaje[0]
+				posx = int(mensaje[1].decode("ascii"))
+				posy = int(mensaje[2].decode("ascii"))
+				posicionPersonaje[personaje]=(posx,posy)
+				fondo=pygame.image.load("imagenes/fondo.jpg")
+				pacman=pygame.image.load("imagenes/pacman.png")
+				amarillo=pygame.image.load("imagenes/amarillo.png")
+				azul=pygame.image.load("imagenes/asul.png")
+				rojo=pygame.image.load("imagenes/rojo.png")
+				rosa=pygame.image.load("imagenes/rosa.png")
+				ventana.blit(fondo, (0,0))
+				ventana.blit(pacman, posicionPersonaje[b"pacman"])
+				ventana.blit(amarillo, posicionPersonaje[b"fantasmaAmarillo"])
+				ventana.blit(azul, posicionPersonaje[b"fantasmaAzul"])
+				ventana.blit(rojo, posicionPersonaje[b"fantasmaRojo"])
+				ventana.blit(rosa, posicionPersonaje[b"fantasmaRosa"])
+				pygame.display.flip()		
 
 		elif sys.stdin.fileno() in socks and iniciarJuego:
-			print("?")
-            #command = input()
-            #dest, msg = command.split(' ', 1)
-            #socket.send_multipart([bytes(dest, 'ascii'), bytes(msg, 'ascii')])
+			command = input()
+			if command == "d":
+				print("der")
+				socket.send_multipart([b"movimiento", b"derecha"])
+			if command == "a":
+				print("isq")
+				socket.send_multipart([b"movimiento", b"izquierda"])
+			if command == "w":
+				print("arr")
+				socket.send_multipart([b"movimiento", b"arriba"])
+			if command == "s":
+				print("aba")
+				socket.send_multipart([b"movimiento", b"abajo"])
 
 
 if __name__ == '__main__':
