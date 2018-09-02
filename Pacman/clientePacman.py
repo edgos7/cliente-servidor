@@ -1,8 +1,22 @@
 import zmq
 import sys
 import pygame
-import threading
 from pygame.locals import *
+
+def mostrarImagenes (ventana,posicionPersonaje):
+	fondo=pygame.image.load("imagenes/fondo.jpg")
+	pacman=pygame.image.load("imagenes/pacman.png")
+	amarillo=pygame.image.load("imagenes/amarillo.png")
+	azul=pygame.image.load("imagenes/asul.png")
+	rojo=pygame.image.load("imagenes/rojo.png")
+	rosa=pygame.image.load("imagenes/rosa.png")
+	ventana.blit(fondo, (0,0))
+	ventana.blit(pacman, posicionPersonaje[b"pacman"])
+	ventana.blit(amarillo, posicionPersonaje[b"fantasmaAmarillo"])
+	ventana.blit(azul, posicionPersonaje[b"fantasmaAzul"])
+	ventana.blit(rojo, posicionPersonaje[b"fantasmaRojo"])
+	ventana.blit(rosa, posicionPersonaje[b"fantasmaRosa"])
+	pygame.display.flip()
 
 def main():	
 	if len(sys.argv) != 2:
@@ -35,51 +49,22 @@ def main():
 				pygame.init()
 				ventana=pygame.display.set_mode((alto, ancho))
 				pygame.display.set_caption("figuras de pacman moviendose")
-				fondo=pygame.image.load("imagenes/fondo.jpg")
-				pacman=pygame.image.load("imagenes/pacman.png")
-				amarillo=pygame.image.load("imagenes/amarillo.png")
-				azul=pygame.image.load("imagenes/asul.png")
-				rojo=pygame.image.load("imagenes/rojo.png")
-				rosa=pygame.image.load("imagenes/rosa.png")
-				ventana.blit(fondo, (0,0))
-				ventana.blit(pacman, posicionPersonaje[b"pacman"])
-				ventana.blit(amarillo, posicionPersonaje[b"fantasmaAmarillo"])
-				ventana.blit(azul, posicionPersonaje[b"fantasmaAzul"])
-				ventana.blit(rojo, posicionPersonaje[b"fantasmaRojo"])
-				ventana.blit(rosa, posicionPersonaje[b"fantasmaRosa"])
-				pygame.display.flip()
+				mostrarImagenes(ventana,posicionPersonaje)
 			if operacion == b"actualizarPosicion":
 				personaje = mensaje[0]
 				posx = int(mensaje[1].decode("ascii"))
 				posy = int(mensaje[2].decode("ascii"))
-				posicionPersonaje[personaje]=(posx,posy)
-				fondo=pygame.image.load("imagenes/fondo.jpg")
-				pacman=pygame.image.load("imagenes/pacman.png")
-				amarillo=pygame.image.load("imagenes/amarillo.png")
-				azul=pygame.image.load("imagenes/asul.png")
-				rojo=pygame.image.load("imagenes/rojo.png")
-				rosa=pygame.image.load("imagenes/rosa.png")
-				ventana.blit(fondo, (0,0))
-				ventana.blit(pacman, posicionPersonaje[b"pacman"])
-				ventana.blit(amarillo, posicionPersonaje[b"fantasmaAmarillo"])
-				ventana.blit(azul, posicionPersonaje[b"fantasmaAzul"])
-				ventana.blit(rojo, posicionPersonaje[b"fantasmaRojo"])
-				ventana.blit(rosa, posicionPersonaje[b"fantasmaRosa"])
-				pygame.display.flip()		
-
+				posicionPersonaje[personaje]=(posx,posy)		
+				mostrarImagenes(ventana,posicionPersonaje)
 		elif sys.stdin.fileno() in socks and iniciarJuego:
 			command = input()
 			if command == "d":
-				print("der")
 				socket.send_multipart([b"movimiento", b"derecha"])
 			if command == "a":
-				print("isq")
 				socket.send_multipart([b"movimiento", b"izquierda"])
 			if command == "w":
-				print("arr")
 				socket.send_multipart([b"movimiento", b"arriba"])
 			if command == "s":
-				print("aba")
 				socket.send_multipart([b"movimiento", b"abajo"])
 
 
