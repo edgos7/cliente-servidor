@@ -37,7 +37,7 @@ def computeHash(bytes):
     sha1.update(bytes)
     return sha1.hexdigest()
 
-def uploadFile(context, filename, servers, proxy):
+def uploadFile(context, filename, servers, proxy,propietario):
     sockets = []
     for ad in servers:
         s = context.socket(zmq.REQ)
@@ -56,6 +56,8 @@ def uploadFile(context, filename, servers, proxy):
             s = sockets[part % len(sockets)]
             s.send_multipart([b"upload", filename, bt, sha1bt, completeSha1])
             response = s.recv()
+            proxy.send_multipart([b"ubicacionParte", sha1bt,servers[part%len(sockets)]])
+            proxy.recv()
             with open(completeSha1.decode("ascii")+".txt", "a") as output:
             	output.write(sha1bt.decode("ascii")+"\n")
             print("Received reply for part {} ".format(part))
@@ -64,7 +66,14 @@ def uploadFile(context, filename, servers, proxy):
                 finished = True
     with open(completeSha1.decode("ascii")+".txt", "rb") as f:
     	indice=f.read()
-    	proxy.send_multipart([b"sendIndex",indice,completeSha1,filename])
+    	s.send_multipart([b"sendIndex",indice,completeSha1,filename])
+    	response=s.recv()
+    	proxy.send_multipart([b"ubicacionParte", sha1bt,servers[part%len(sockets)]])
+        proxy.recv()
+        proxy.send_multipart([b"propietarioIndex", sha1bt,servers[part%len(sockets)]])
+        proxy.recv()
+        proxy.send_multipart([b"nombreArchivo", sha1bt,servers[part%len(sockets)]])
+        proxy.recv()
     os.remove(completeSha1.decode("ascii")+".txt")
 
 def main():
@@ -87,7 +96,7 @@ def main():
         proxy.send_multipart([b"availableServers"])
         servers = proxy.recv_multipart()
         print("There are {} available servers".format(len(servers)))
-        uploadFile(context, filename, servers,proxy)
+        uploadFile(context, filename, servers,proxy,username)
         print("File {} was uploaded.".format(filename))
     elif operation == "download":
         print("Not implemented yet")

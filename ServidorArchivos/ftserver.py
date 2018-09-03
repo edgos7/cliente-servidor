@@ -33,6 +33,11 @@ def main():
             with open(storeAs, "wb") as f:
                 f.write(byts)
             print("Uploaded as {}".format(storeAs))
+        if operation ==b"sendIndex":
+                datos, completeSha1, filename = rest
+                with open("servidor1/"+completeSha1.decode("ascii")+".txt", "wb") as f:
+                    f.write(datos)
+                    print("index Subido")
         else:
             print("Unsupported operation: {}".format(operation))
         clients.send(b"Done")
