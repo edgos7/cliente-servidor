@@ -4,13 +4,13 @@ import pygame
 from pygame.locals import *
 
 def mostrarImagenes (ventana,posicionPersonaje):
-	fondo=pygame.image.load("imagenes/fondo.jpg")
+	ceresa=pygame.image.load("imagenes/ceresa.png")
 	pacman=pygame.image.load("imagenes/pacman.png")
 	amarillo=pygame.image.load("imagenes/amarillo.png")
 	azul=pygame.image.load("imagenes/asul.png")
 	rojo=pygame.image.load("imagenes/rojo.png")
 	rosa=pygame.image.load("imagenes/rosa.png")
-	ventana.blit(fondo, (0,0))
+	ventana.blit(ceresa, posicionPersonaje[b"ceresa"])
 	ventana.blit(pacman, posicionPersonaje[b"pacman"])
 	ventana.blit(amarillo, posicionPersonaje[b"fantasmaAmarillo"])
 	ventana.blit(azul, posicionPersonaje[b"fantasmaAzul"])
@@ -33,7 +33,7 @@ def main():
 	poller.register(sys.stdin, zmq.POLLIN)
 	poller.register(socket, zmq.POLLIN)
 	socket.send_multipart([b"nuevoJugador", identidad])
-	posicionPersonaje = {b"pacman":(250,250),b"fantasmaAmarillo":(0,0),b"fantasmaAzul":(0,450),b"fantasmaRojo":(450,0),b"fantasmaRosa":(450,450)}
+	posicionPersonaje = {b"pacman":(500,350),b"fantasmaAmarillo":(0,0),b"fantasmaAzul":(0,650),b"fantasmaRojo":(950,0),b"fantasmaRosa":(950,650),b"ceresa":(300,300)}
 	ventana=""
 	while True:
 		socks = dict(poller.poll())
@@ -44,10 +44,10 @@ def main():
 				print("tu personaje es: " + miPersonaje.decode("ascii"))
 			if operacion == b"iniciarJuego":
 				iniciarJuego = True
-				alto=500
-				ancho=500
+				alto=700
+				ancho=1000
 				pygame.init()
-				ventana=pygame.display.set_mode((alto, ancho))
+				ventana=pygame.display.set_mode((ancho, alto))
 				pygame.display.set_caption("figuras de pacman moviendose")
 				mostrarImagenes(ventana,posicionPersonaje)
 			if operacion == b"actualizarPosicion":
@@ -56,6 +56,13 @@ def main():
 				posy = int(mensaje[2].decode("ascii"))
 				posicionPersonaje[personaje]=(posx,posy)		
 				mostrarImagenes(ventana,posicionPersonaje)
+			if operacion == b"ganaPacman":
+				print("el ganador es pacman")
+				exit()
+			if operacion == b"pierdePacman":
+				print("los ganadores son los fantasmas")
+				exit()
+
 		elif sys.stdin.fileno() in socks and iniciarJuego:
 			command = input()
 			if command == "d":

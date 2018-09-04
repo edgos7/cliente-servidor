@@ -1,20 +1,48 @@
 import zmq
 
-def movimientoValido(posPersonaje, direccion,posicionPersonaje):
+def movimientoValido(posPersonaje, direccion,posicionPersonaje,obtenerPersonaje):
 	posx = posPersonaje[0]
 	posy = posPersonaje[1]
+	posCeresa = posicionPersonaje[b"ceresa"]
+	if(obtenerPersonaje==b"pacman" ):
+		if direccion == b"derecha":
+			if ((posx+50) < 1000) and (posCeresa==(posx+50,posy)):
+				return "GanaPacman"
+		if direccion == b"izquierda":
+			if ((posx-50) > -50) and (posCeresa==(posx-50,posy)):
+				return "GanaPacman"
+		if direccion == b"arriba":
+			if ((posy-50) > -50) and (posCeresa==(posx,posy-50)):
+				return "GanaPacman"
+		if direccion == b"abajo":
+			if ((posy+50) < 700) and (posCeresa==(posx,posy+50)):
+				return "GanaPacman"
+	else:
+		if direccion == b"derecha":
+			if ((posx+50) < 1000) and (posicionPersonaje[b"pacman"]==(posx+50,posy)):
+				return "PierdePacman"
+		if direccion == b"izquierda":
+			if ((posx-50) > -50) and (posicionPersonaje[b"pacman"]==(posx-50,posy)):
+				return "PierdePacman"
+		if direccion == b"arriba":
+			if ((posy-50) > -50) and (posicionPersonaje[b"pacman"]==(posx,posy-50)):
+				return "PierdePacman"
+		if direccion == b"abajo":
+			if ((posy+50) < 700) and (posicionPersonaje[b"pacman"]==(posx,posy+50)):
+				return "PierdePacman"
+	
 	if direccion == b"derecha":
-		if ((posx+50) < 500) and hayOtraPersonaje(posicionPersonaje,(posx+50,posy)):
-			return True
+		if ((posx+50) < 1000) and hayOtraPersonaje(posicionPersonaje,(posx+50,posy)):
+			return "valido"
 	if direccion == b"izquierda":
 		if ((posx-50) > -50) and hayOtraPersonaje(posicionPersonaje,(posx-50,posy)):
-			return True
+			return "valido"
 	if direccion == b"arriba":
 		if ((posy-50) > -50) and hayOtraPersonaje(posicionPersonaje,(posx,posy-50)):
-			return True
+			return "valido"
 	if direccion == b"abajo":
-		if ((posy+50) < 500) and hayOtraPersonaje(posicionPersonaje,(posx,posy+50)):
-			return True
+		if ((posy+50) < 700) and hayOtraPersonaje(posicionPersonaje,(posx,posy+50)):
+			return "valido"
 
 
 def actualizarPosicion(posPersonaje, direccion):
@@ -42,7 +70,7 @@ def main():
 	listaPersonajes = (b"pacman",b"fantasmaAmarillo",b"fantasmaAzul",b"fantasmaRojo",b"fantasmaRosa")
 	usuariosConectados = {}
 	personaje = {}
-	posicionPersonaje = {b"pacman":(250,250),b"fantasmaAmarillo":(0,0),b"fantasmaAzul":(0,450),b"fantasmaRojo":(450,0),b"fantasmaRosa":(450,450)}
+	posicionPersonaje = {b"pacman":(500,350),b"fantasmaAmarillo":(0,0),b"fantasmaAzul":(0,650),b"fantasmaRojo":(950,0),b"fantasmaRosa":(950,650),b"ceresa":(300,300)}
 	context = zmq.Context()
 	socket = context.socket(zmq.ROUTER)
 	socket.bind("tcp://*:5555")
@@ -58,14 +86,19 @@ def main():
 			direccion = mensaje[0]
 			obtenerPersonaje = personaje[identidad]
 			posPersonaje = posicionPersonaje[obtenerPersonaje]
-			valido = movimientoValido(posPersonaje, direccion,posicionPersonaje)
-			if valido == True:
+			valido = movimientoValido(posPersonaje, direccion,posicionPersonaje,obtenerPersonaje)
+			if valido == "valido":
 				nuevaPos = actualizarPosicion(posPersonaje,direccion)
 				posicionPersonaje[obtenerPersonaje] = nuevaPos
 				for member in usuariosConectados:
 					socket.send_multipart([member , b"actualizarPosicion",obtenerPersonaje, bytes(str(nuevaPos[0]),"ascii"), bytes(str(nuevaPos[1]),"ascii")])
-
-		if conectados == 5:
+			if valido =="GanaPacman":
+				for member in usuariosConectados:
+					socket.send_multipart([member , b"ganaPacman"])
+			if valido =="PierdePacman":
+				for member in usuariosConectados:
+					socket.send_multipart([member , b"pierdePacman"])
+		if conectados == 2:
 			for member in usuariosConectados:
 				socket.send_multipart([member , b"iniciarJuego" ])
 
