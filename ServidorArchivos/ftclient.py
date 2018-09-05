@@ -65,14 +65,15 @@ def uploadFile(context, filename, servers, proxy,propietario):
             if len(bt) < partSize:
                 finished = True
     with open(completeSha1.decode("ascii")+".txt", "rb") as f:
-    	indice=f.read()
-    	s.send_multipart([b"sendIndex",indice,completeSha1,filename])
-    	response=s.recv()
-    	proxy.send_multipart([b"ubicacionParte", sha1bt,servers[part%len(sockets)]])
+        indice=f.read()
+        sha1Indice=bytes(computeHashFile(completeSha1.decode("ascii")+".txt"),"ascii")
+        s.send_multipart([b"sendIndex",indice,sha1Indice,filename])
+        response=s.recv()
+        proxy.send_multipart([b"ubicacionParte", sha1Indice,servers[part%len(sockets)]])
         proxy.recv()
-        proxy.send_multipart([b"propietarioIndex", sha1bt,servers[part%len(sockets)]])
+        proxy.send_multipart([b"propietarioIndex", sha1Indice,propietario])
         proxy.recv()
-        proxy.send_multipart([b"nombreArchivo", sha1bt,servers[part%len(sockets)]])
+        proxy.send_multipart([b"nombreArchivo", sha1Indice,filename])
         proxy.recv()
     os.remove(completeSha1.decode("ascii")+".txt")
 
@@ -83,7 +84,7 @@ def main():
         exit()
 
 
-    username = sys.argv[1]
+    username = sys.argv[1].encode('ascii')
     operation = sys.argv[2]
     filename = sys.argv[3].encode('ascii')
 

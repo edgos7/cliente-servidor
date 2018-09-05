@@ -27,7 +27,7 @@ def main():
     while True:
         socks = dict(poller.poll())
         if clients in socks:
-            print("Message from client")
+            #print("Message from client")
             operation, *msg = clients.recv_multipart()
             if operation == b"availableServers":
                 clients.send_multipart(servAddresses)
@@ -35,18 +35,24 @@ def main():
                 sha1Parte = msg[0]
                 ipServidor = msg[1]
                 clients.send(b"ok")
-                print(ipServidor)
+                ubicacion[sha1Parte]=ipServidor
+                print("ubicacion")
+                print(ubicacion)
             if operation == b"propietarioIndex":
-                sha1Parte = msg[0]
-                ipServidor = msg[1]
+                sha1Indice = msg[0]
+                dueno = msg[1]
                 clients.send(b"ok")
-                print(ipServidor)
+                propietario[sha1Indice]=dueno
+                print("dueños")
+                print(propietario)
             if operation == b"nombreArchivo":
-                sha1Parte = msg[0]
-                ipServidor = msg[1]
+                sha1Indice = msg[0]
+                nombreIndice = msg[1]
                 clients.send(b"ok")
-                print(ipServidor)
-            print(msg)
+                nombreArchivo[sha1Indice]=nombreIndice
+                print("nombres")
+                print(nombreArchivo)
+            #print(msg)
 
         if servers in socks:
             print("Message from server")
