@@ -1,47 +1,47 @@
 import zmq
 
-def movimientoValido(posPersonaje, direccion,posicionPersonaje,obtenerPersonaje):
+def movimientoValido(posPersonaje, direccion,posicionPersonaje,obtenerPersonaje,muros):
 	posx = posPersonaje[0]
 	posy = posPersonaje[1]
 	posCeresa = posicionPersonaje[b"ceresa"]
 	if(obtenerPersonaje==b"pacman" ):
 		if direccion == b"derecha":
-			if ((posx+50) < 1000) and (posCeresa==(posx+50,posy)):
+			if ((posx+50) < 650) and (posCeresa==(posx+50,posy)):
 				return "GanaPacman"
 		if direccion == b"izquierda":
-			if ((posx-50) > -50) and (posCeresa==(posx-50,posy)):
+			if ((posx-50) > 0) and (posCeresa==(posx-50,posy)):
 				return "GanaPacman"
 		if direccion == b"arriba":
-			if ((posy-50) > -50) and (posCeresa==(posx,posy-50)):
+			if ((posy-50) > 0) and (posCeresa==(posx,posy-50)):
 				return "GanaPacman"
 		if direccion == b"abajo":
-			if ((posy+50) < 700) and (posCeresa==(posx,posy+50)):
+			if ((posy+50) < 650) and (posCeresa==(posx,posy+50)):
 				return "GanaPacman"
 	else:
 		if direccion == b"derecha":
-			if ((posx+50) < 1000) and (posicionPersonaje[b"pacman"]==(posx+50,posy)):
+			if ((posx+50) < 650) and (posicionPersonaje[b"pacman"]==(posx+50,posy)):
 				return "PierdePacman"
 		if direccion == b"izquierda":
-			if ((posx-50) > -50) and (posicionPersonaje[b"pacman"]==(posx-50,posy)):
+			if ((posx-50) > 0) and (posicionPersonaje[b"pacman"]==(posx-50,posy)):
 				return "PierdePacman"
 		if direccion == b"arriba":
-			if ((posy-50) > -50) and (posicionPersonaje[b"pacman"]==(posx,posy-50)):
+			if ((posy-50) > 0) and (posicionPersonaje[b"pacman"]==(posx,posy-50)):
 				return "PierdePacman"
 		if direccion == b"abajo":
-			if ((posy+50) < 700) and (posicionPersonaje[b"pacman"]==(posx,posy+50)):
+			if ((posy+50) < 650) and (posicionPersonaje[b"pacman"]==(posx,posy+50)):
 				return "PierdePacman"
 	
 	if direccion == b"derecha":
-		if ((posx+50) < 1000) and hayOtraPersonaje(posicionPersonaje,(posx+50,posy)):
+		if ((posx+50) < 650) and hayOtraPersonaje(posicionPersonaje,(posx+50,posy),muros):
 			return "valido"
 	if direccion == b"izquierda":
-		if ((posx-50) > -50) and hayOtraPersonaje(posicionPersonaje,(posx-50,posy)):
+		if ((posx-50) > 0) and hayOtraPersonaje(posicionPersonaje,(posx-50,posy),muros):
 			return "valido"
 	if direccion == b"arriba":
-		if ((posy-50) > -50) and hayOtraPersonaje(posicionPersonaje,(posx,posy-50)):
+		if ((posy-50) > 0) and hayOtraPersonaje(posicionPersonaje,(posx,posy-50),muros):
 			return "valido"
 	if direccion == b"abajo":
-		if ((posy+50) < 700) and hayOtraPersonaje(posicionPersonaje,(posx,posy+50)):
+		if ((posy+50) < 650) and hayOtraPersonaje(posicionPersonaje,(posx,posy+50),muros):
 			return "valido"
 
 
@@ -59,9 +59,12 @@ def actualizarPosicion(posPersonaje, direccion):
 	nuevaDireccion = (posx,posy)
 	return nuevaDireccion
 
-def hayOtraPersonaje(posicionPersonaje,posPersonaje):
+def hayOtraPersonaje(posicionPersonaje,posPersonaje,muros):
 	for member in posicionPersonaje:
 		if(posicionPersonaje[member] == posPersonaje):
+			return False
+	for pos in muros:
+		if(pos == posPersonaje):
 			return False
 	return True
 
@@ -70,7 +73,8 @@ def main():
 	listaPersonajes = (b"pacman",b"fantasmaAmarillo",b"fantasmaAzul",b"fantasmaRojo",b"fantasmaRosa")
 	usuariosConectados = {}
 	personaje = {}
-	posicionPersonaje = {b"pacman":(500,350),b"fantasmaAmarillo":(0,0),b"fantasmaAzul":(0,650),b"fantasmaRojo":(950,0),b"fantasmaRosa":(950,650),b"ceresa":(300,300)}
+	posicionPersonaje = {b"pacman":(350,400),b"fantasmaAmarillo":(50,50),b"fantasmaAzul":(50,600),b"fantasmaRojo":(600,50),b"fantasmaRosa":(600,600),b"ceresa":(350,150)}
+	muros = [(100,100),(150,100),(100,150),(150,150),(500,100),(550,100),(500,150),(550,150),(100,500),(150,500),(100,550),(150,550),(500,500),(550,500),(500,550),(550,550),(300,300),(350,300),(300,350),(350,350)]
 	context = zmq.Context()
 	socket = context.socket(zmq.ROUTER)
 	socket.bind("tcp://*:5555")
@@ -86,7 +90,7 @@ def main():
 			direccion = mensaje[0]
 			obtenerPersonaje = personaje[identidad]
 			posPersonaje = posicionPersonaje[obtenerPersonaje]
-			valido = movimientoValido(posPersonaje, direccion,posicionPersonaje,obtenerPersonaje)
+			valido = movimientoValido(posPersonaje, direccion,posicionPersonaje,obtenerPersonaje,muros)
 			if valido == "valido":
 				nuevaPos = actualizarPosicion(posPersonaje,direccion)
 				posicionPersonaje[obtenerPersonaje] = nuevaPos
@@ -98,7 +102,7 @@ def main():
 			if valido =="PierdePacman":
 				for member in usuariosConectados:
 					socket.send_multipart([member , b"pierdePacman"])
-		if conectados == 2:
+		if conectados == 5:
 			for member in usuariosConectados:
 				socket.send_multipart([member , b"iniciarJuego" ])
 

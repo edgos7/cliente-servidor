@@ -18,7 +18,39 @@ def mostrarImagenes (ventana,posicionPersonaje):
 	ventana.blit(azul, posicionPersonaje[b"fantasmaAzul"])
 	ventana.blit(rojo, posicionPersonaje[b"fantasmaRojo"])
 	ventana.blit(rosa, posicionPersonaje[b"fantasmaRosa"])
+	muro(ventana)
+	muro2(ventana,100,100)
+	muro2(ventana,500,100)
+	muro2(ventana,100,500)
+	muro2(ventana,500,500)
+	muro2(ventana,300,300)
 	pygame.display.flip()
+
+def muro(ventana):
+	i = 0
+	x = 0
+	y = 0
+	for i in range(14):
+		muro = pygame.image.load("imagenes/bloque.png")
+		ventana.blit(muro, (x,0))
+		ventana.blit(muro, (x,650))
+		ventana.blit(muro, (0,y))
+		ventana.blit(muro, (650,y))
+		x += 50
+		y +=50
+
+def muro2(ventana, inix,iniy):
+	copiax = inix
+	
+	i = 0
+	for i in range(2):
+		muro = pygame.image.load("imagenes/bloque.png")
+		ventana.blit(muro, (inix,iniy))
+		ventana.blit(muro, (inix+50,iniy))
+		inix = copiax
+		iniy +=50
+	
+
 
 def main():	
 	if len(sys.argv) != 2:
@@ -32,9 +64,9 @@ def main():
 	socket.identity = identidad
 	socket.connect("tcp://localhost:5555")
 	socket.send_multipart([b"nuevoJugador", identidad])
-	posicionPersonaje = {b"pacman":(500,350),b"fantasmaAmarillo":(0,0),b"fantasmaAzul":(0,650),b"fantasmaRojo":(950,0),b"fantasmaRosa":(950,650),b"ceresa":(300,300)}
+	posicionPersonaje = {b"pacman":(350,400),b"fantasmaAmarillo":(50,50),b"fantasmaAzul":(50,600),b"fantasmaRojo":(600,50),b"fantasmaRosa":(600,600),b"ceresa":(350,150)}
 	alto=700
-	ancho=1000
+	ancho=700
 	pygame.init()
 	ventana=pygame.display.set_mode((ancho, alto))
 	pygame.display.set_caption("figuras de pacman moviendose")
