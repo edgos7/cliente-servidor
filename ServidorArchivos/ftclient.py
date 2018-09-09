@@ -2,6 +2,7 @@ import zmq
 import sys
 import hashlib
 import os
+import threading
 
 partSize = 1024 * 1024 * 10
 
@@ -111,18 +112,38 @@ def download(filename,context,proxy,username):
 	print("descarga finalisada")
 
 
+def escucharMensajes(socket,context,proxy):
+	while True:
+		msg = socket.recv_json()
+		if msg["operation"]=="compartir":
+			socket.send_string("ok")
+			quien=msg["quien"]
+			cualArchivo=msg["cualArchivo"]
+			print("El usuario {} compartio el archivo {} contigo, deseas descargarlo: (s/n)".format(quien,cualArchivo))
+			respuesta=input()
+			if respuesta == "s":
+				download(cualArchivo,context,proxy,quien)
+				print("respuesta "+respuesta)
+			
 
 
 def main():
-    if len(sys.argv) != 2:
-        print("Sample call: python ftclient <username> ")
+    if len(sys.argv) != 4:
+        print("Sample call: python ftclient <username> <ip Client> <port client>  ")
         exit()
     username = sys.argv[1]
+    ip = sys.argv[2]
+    port= sys.argv[3]
     context = zmq.Context()
     proxy = context.socket(zmq.REQ)
     proxy.connect("tcp://localhost:6666")
-    #proxy.send_json({"operation": "registrarUsuario", "user":username})
-    #proxy.recv()
+
+    rep_socket = context.socket(zmq.REP)
+    rep_socket.bind("tcp://*:{}".format(port))
+    proxy.send_json({"operation": "registrarUsuario", "user":username,"ip":ip,"port":port})
+    proxy.recv_string()
+    threading.Thread(target = escucharMensajes, args = (rep_socket,context,proxy)).start()
+
     while True:
         operation = input("Ingrese la opcion que desea realisar: ")
         print("Operation: {}".format(operation))
@@ -145,8 +166,10 @@ def main():
             filename=input("Ingrese nombre del archivo a descargar: ")
             download(filename,context,proxy,username)
         elif operation == "share":
-            print("Not implemented yet")
-            
+            conQuien= input("Nombre de usuario con quien compartir: ")
+            cualArchivo=input("Nombre del archivo a compartir: ")
+            proxy.send_json({"operation":"compartir","quien": username,"conQuien":conQuien,"cualArchivo":cualArchivo})
+            proxy.recv_string()
         else:
             print("Operation not found!!!")
 

@@ -74,9 +74,24 @@ def main():
                 nombreParte=msg["nombreArchivo"]
                 ipParte = ubicacion[nombreParte]
                 clients.send_json({"ipParte": ipParte})
-            #if msg["operation"]=="registrarUsuario":
-                #user =msg["user"]
-                #usuarios[user]=clients
+            if msg["operation"]=="registrarUsuario":
+                user =msg["user"]
+                ip=msg["ip"]
+                port=msg["port"]
+                us_socket = context.socket(zmq.REQ)
+                us_socket.connect("tcp://{}:{}".format(ip, port))
+                usuarios[user]=us_socket
+                clients.send_string("ok")
+                print(usuarios)
+            if msg["operation"]=="compartir":
+                quien=msg["quien"]
+                conQuien=msg["conQuien"]
+                cualArchivo=msg["cualArchivo"]
+                socketBuscado=usuarios[conQuien]
+                socketBuscado.send_json(msg)
+                socketBuscado.recv_string()
+                clients.send_string("ok")
+
 
         if servers in socks:
             print("Message from server")
