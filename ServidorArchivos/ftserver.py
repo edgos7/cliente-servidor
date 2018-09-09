@@ -29,33 +29,35 @@ def main():
         msg = clients.recv_json()
         if msg["operation"] == "upload":
             filename = msg["filename"]
-            byts = msg["datos"].encode("UTF-8","ignore")
             sha1byts = msg["sha1Datos"]
             sha1complete = msg["sha1Completo"]
             storeAs = serversFolder + sha1byts
+            clients.send_string("Done")
+            byts = clients.recv()
+            clients.send_string("ok")
             print("Storing {}".format(storeAs))
             with open(storeAs, "wb") as f:
                 f.write(byts)
             print("Uploaded as {}".format(storeAs))
-            clients.send_string("Done")
+            
         if msg["operation"] == "sendIndex":
                 datos = msg["datos"].encode("ascii","ignore")
                 completeSha1 = msg["completeSha1"]
                 filename = msg["nombreArchivo"]
-                with open("servidor1/"+completeSha1+".txt", "wb") as f:
+                with open(serversFolder+""+completeSha1+".txt", "wb") as f:
                     f.write(datos)
                 print("index Subido")
                 clients.send_string("Done")
         if msg["operation"]== "descargarIndex":
             nombreArchivo= msg["indexDescargar"]
-            with open("servidor1/"+nombreArchivo+".txt", "rb") as output:
+            with open(serversFolder+""+nombreArchivo+".txt", "rb") as output:
                 datos=output.read()
                 clients.send_json({"datos": datos.decode("ascii","ignore")})
         if msg["operation"]=="descargarParte":
             nombreParte=msg["parteDescargar"]
-            with open("servidor1/"+nombreParte,"rb") as output:
+            with open(serversFolder+""+nombreParte,"rb") as output:
                 datos=output.read()
-                clients.send_json({"datos": datos.decode("UTF-8","ignore")})
+                clients.send(datos)
         
 
 if __name__ == '__main__':

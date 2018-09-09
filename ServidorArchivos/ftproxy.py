@@ -74,6 +74,9 @@ def main():
                 nombreParte=msg["nombreArchivo"]
                 ipParte = ubicacion[nombreParte]
                 clients.send_json({"ipParte": ipParte})
+            if msg["operation"]=="registrarUsuario":
+                user =msg["user"]
+                usuarios[user]=clients
 
         if servers in socks:
             print("Message from server")

@@ -54,13 +54,10 @@ def uploadFile(context, filename, servers, proxy,propietario):
             bt = f.read(partSize)
             sha1bt = computeHash(bt)
             s = sockets[part % len(sockets)]
-            #operation =b"upload"
-            #filename = filename.encode("ascii")
-            #datos=bt
-            #sha1Datos=sha1bt.encode("ascii")
-            #sha1Completo=completeSha1.encode("ascii")
-            s.send_json({"operation" : "upload", "filename": filename, "datos" : bt.decode("UTF-8","ignore"),"sha1Datos": sha1bt,"sha1Completo" : completeSha1 })
+            s.send_json({"operation" : "upload", "filename": filename, "sha1Datos": sha1bt,"sha1Completo" : completeSha1 })
             response = s.recv_string()
+            s.send(bt)
+            s.recv_string()
             proxy.send_json({"operation":"ubicacionParte", "sha1": sha1bt,"ipServidor": servers[part%len(sockets)]})
             proxy.recv_string()
             with open(completeSha1+".txt", "a") as output:
@@ -105,8 +102,7 @@ def download(filename,context,proxy,username):
 			s=context.socket(zmq.REQ)
 			s.connect("tcp://"+ ipParte)
 			s.send_json({"operation": "descargarParte", "parteDescargar": linea})
-			msg=s.recv_json()
-			datos =msg["datos"].encode("UTF-8","ignore")
+			datos =s.recv()
 			with open("descargas/"+filename, "ab") as f:
 				f.write(datos)
 			linea = output.readline()
@@ -125,6 +121,8 @@ def main():
     context = zmq.Context()
     proxy = context.socket(zmq.REQ)
     proxy.connect("tcp://localhost:6666")
+    proxy.send_json({"operation": "registrarUsuario", "user":username})
+    proxy.recv()
     while True:
         operation = input("Ingrese la opcion que desea realisar: ")
         print("Operation: {}".format(operation))
@@ -148,6 +146,7 @@ def main():
             download(filename,context,proxy,username)
         elif operation == "share":
             print("Not implemented yet")
+            
         else:
             print("Operation not found!!!")
 
