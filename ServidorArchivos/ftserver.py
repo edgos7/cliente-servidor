@@ -19,28 +19,44 @@ def main():
     clients = context.socket(zmq.REP)
     clients.bind("tcp://*:{}".format(clientsPort))
 
-    proxy.send_multipart([b"newServer", bytes(clientsAddress, "ascii")])
-    m = proxy.recv()
+    
+    proxy.send_json({"operation" : "newServer","direccionIp":clientsAddress})
+    m = proxy.recv_string()
     print(m)
 
     while True:
         print("Waitting for useres to upload!!!")
-        operation, *rest = clients.recv_multipart()
-        if operation == b"upload":
-            filename, byts, sha1byts, sha1complete = rest
-            storeAs = serversFolder + sha1byts.decode("ascii")
+        msg = clients.recv_json()
+        if msg["operation"] == "upload":
+            filename = msg["filename"]
+            byts = msg["datos"].encode("UTF-8","ignore")
+            sha1byts = msg["sha1Datos"]
+            sha1complete = msg["sha1Completo"]
+            storeAs = serversFolder + sha1byts
             print("Storing {}".format(storeAs))
             with open(storeAs, "wb") as f:
                 f.write(byts)
             print("Uploaded as {}".format(storeAs))
-        if operation ==b"sendIndex":
-                datos, completeSha1, filename = rest
-                with open("servidor1/"+completeSha1.decode("ascii")+".txt", "wb") as f:
+            clients.send_string("Done")
+        if msg["operation"] == "sendIndex":
+                datos = msg["datos"].encode("ascii","ignore")
+                completeSha1 = msg["completeSha1"]
+                filename = msg["nombreArchivo"]
+                with open("servidor1/"+completeSha1+".txt", "wb") as f:
                     f.write(datos)
-                    print("index Subido")
-        else:
-            print("Unsupported operation: {}".format(operation))
-        clients.send(b"Done")
+                print("index Subido")
+                clients.send_string("Done")
+        if msg["operation"]== "descargarIndex":
+            nombreArchivo= msg["indexDescargar"]
+            with open("servidor1/"+nombreArchivo+".txt", "rb") as output:
+                datos=output.read()
+                clients.send_json({"datos": datos.decode("ascii","ignore")})
+        if msg["operation"]=="descargarParte":
+            nombreParte=msg["parteDescargar"]
+            with open("servidor1/"+nombreParte,"rb") as output:
+                datos=output.read()
+                clients.send_json({"datos": datos.decode("UTF-8","ignore")})
+        
 
 if __name__ == '__main__':
     main()
