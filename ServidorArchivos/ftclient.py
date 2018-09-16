@@ -124,19 +124,22 @@ def escucharMensajes(socket,context,proxy):
 			if respuesta == "s":
 				download(cualArchivo,context,proxy,quien)
 				print("respuesta "+respuesta)
+				
 			
 
 
 def main():
-    if len(sys.argv) != 4:
-        print("Sample call: python ftclient <username> <ip Client> <port client>  ")
+    if len(sys.argv) != 6:
+        print("Sample call: python ftclient <username> <ip Client> <port client> <ip proxy> <port proxy>  ")
         exit()
     username = sys.argv[1]
     ip = sys.argv[2]
     port= sys.argv[3]
+    ipProxy =sys.argv[4]
+    portProxy = sys.argv[5]
     context = zmq.Context()
     proxy = context.socket(zmq.REQ)
-    proxy.connect("tcp://localhost:6666")
+    proxy.connect("tcp://{}:{}".format(ipProxy,portProxy))
 
     rep_socket = context.socket(zmq.REP)
     rep_socket.bind("tcp://*:{}".format(port))

@@ -12,7 +12,6 @@ def main():
     #diccionario para saber que usuarios hay conectados
     usuarios = {}
 
-
     context = zmq.Context()
     servers = context.socket(zmq.REP)
     servers.bind("tcp://*:5555")

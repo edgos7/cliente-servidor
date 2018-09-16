@@ -3,18 +3,20 @@ import zmq
 import sys
 
 def main():
-    if len(sys.argv) != 4:
-        print("Sample call: python ftserver <address> <port> <folder>")
+    if len(sys.argv) != 6:
+        print("Sample call: python ftserver <address servidor> <port servidor> <folder> <address proxy> <port proxy>")
         exit()
 
     clientsPort = sys.argv[2]
     clientsAddress = sys.argv[1]
     serversFolder = sys.argv[3]
+    ipProxy = sys.argv[4]
+    portProxy = sys.argv[5]
     clientsAddress = clientsAddress + ":" + clientsPort
 
     context = zmq.Context()
     proxy = context.socket(zmq.REQ)
-    proxy.connect("tcp://localhost:5555")
+    proxy.connect("tcp://{}:{}".format(ipProxy,portProxy))
 
     clients = context.socket(zmq.REP)
     clients.bind("tcp://*:{}".format(clientsPort))
